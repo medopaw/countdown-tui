@@ -59,17 +59,17 @@ Arguments:
   <DURATION>  Duration or target time (e.g., 25s, 1m30s, 14:15, 02:30PM)
 
 Options:
-  -u, --up            Count up from zero
-  -s, --say           Announce the time left (macOS only)  
-  -t, --title <TEXT>  Display title below the countdown
+      --up            Count up from zero
+      --say           Announce the time left (macOS only)  
+      --title <TEXT>  Display title below the countdown
   -h, --help          Print help
 
 Examples:
   countdown-tui 25s
-  countdown-tui -title "Coffee Break" 14:15
+  countdown-tui --title "Coffee Break" 14:15
   countdown-tui 02:15PM
-  countdown-tui -up 30s
-  countdown-tui -say 10s
+  countdown-tui --up 30s
+  countdown-tui --say 10s
 ```
 
 ## Features

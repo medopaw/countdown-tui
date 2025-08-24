@@ -24,22 +24,22 @@ use time_parser::parse_duration_or_time;
 #[command(
     after_help = "Examples:
   countdown 25s
-  countdown -title \"Coffee Break\" 14:15
+  countdown --title \"Coffee Break\" 14:15
   countdown 02:15PM
-  countdown -up 30s
-  countdown -say 10s"
+  countdown --up 30s
+  countdown --say 10s"
 )]
 struct Args {
     #[arg(value_name = "DURATION")]
     duration: Option<String>,
 
-    #[arg(short, long, help = "Count up from zero")]
+    #[arg(long, help = "Count up from zero")]
     up: bool,
 
-    #[arg(short, long, help = "Announce the time left")]
+    #[arg(long, help = "Announce the time left")]
     say: bool,
 
-    #[arg(short, long, value_name = "TEXT", help = "Display title below the countdown")]
+    #[arg(long, value_name = "TEXT", help = "Display title below the countdown")]
     title: Option<String>,
     
     #[arg(long, help = "Run internal tests")]
