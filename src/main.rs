@@ -74,7 +74,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if exit_code != 0 {
         std::process::exit(exit_code);
     }
-    
     Ok(())
 }
 
