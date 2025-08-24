@@ -65,13 +65,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     stdout().execute(EnterAlternateScreen)?;
     stdout().execute(crossterm::cursor::Hide)?;
     
-    let result = run_countdown(duration, args.up, args.say, args.title).await;
+    let exit_code = run_countdown(duration, args.up, args.say, args.title).await?;
     
     stdout().execute(LeaveAlternateScreen)?;
     disable_raw_mode()?;
     stdout().execute(crossterm::cursor::Show)?;
     
-    result
+    if exit_code != 0 {
+        std::process::exit(exit_code);
+    }
+    
+    Ok(())
 }
 
 async fn run_countdown(
@@ -79,7 +83,7 @@ async fn run_countdown(
     count_up: bool,
     say_time: bool,
     title: Option<String>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<i32, Box<dyn std::error::Error>> {
     let mode = if count_up { TimerMode::CountUp } else { TimerMode::CountDown };
     let mut state = CountdownState::new(total_duration, mode);
     let mut display = Display::new();
@@ -87,6 +91,7 @@ async fn run_countdown(
     let mut tick_interval = interval(Duration::from_secs(1));
     let mut timer_deadline = Box::pin(tokio::time::sleep(total_duration));
     let mut time_left = total_duration;
+    let mut exit_code = 0;
     
     let (event_tx, mut event_rx) = tokio::sync::mpsc::unbounded_channel();
     
@@ -177,7 +182,8 @@ async fn run_countdown(
                                     }
                                 }
                                 KeyCode::Esc | KeyCode::Char('c') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
-                                    std::process::exit(1);
+                                    exit_code = 1;
+                                    break;
                                 }
                                 _ => {}
                             }
@@ -201,7 +207,7 @@ async fn run_countdown(
     // Abort the event reading task to prevent further input processing
     event_handle.abort();
     
-    Ok(())
+    Ok(exit_code)
 }
 
 async fn say_countdown(seconds: u64) {
