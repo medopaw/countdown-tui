@@ -28,19 +28,19 @@ countdown-tui 1m30s && echo "Time's up!"
 Count up from zero.
 
 ```sh
-countdown-tui --up 30s
+countdown-tui -u 30s
 ```
 
 Announce (via macOS `say` command) last 10 seconds.
 
 ```sh
-countdown-tui --say 10s
+countdown-tui -s 10s
 ```
 
 Display a title below the countdown timer.
 
 ```sh
-countdown-tui --title "Coffee Break" 30s
+countdown-tui -t "Coffee Break" 30s
 ```
 
 ## Key bindings
@@ -59,17 +59,17 @@ Arguments:
   <DURATION>  Duration or target time (e.g., 25s, 1m30s, 14:15, 02:30PM)
 
 Options:
-      --up            Count up from zero
-      --say           Announce the time left (macOS only)  
-      --title <TEXT>  Display title below the countdown
+  -u, --up            Count up from zero
+  -s, --say           Announce the time left (macOS only)  
+  -t, --title <TEXT>  Display title below the countdown
   -h, --help          Print help
 
 Examples:
   countdown-tui 25s
-  countdown-tui --title "Coffee Break" 14:15
+  countdown-tui -t "Coffee Break" 14:15
   countdown-tui 02:15PM
-  countdown-tui --up 30s
-  countdown-tui --say 10s
+  countdown-tui -u 30s
+  countdown-tui -s 10s
 ```
 
 ## Features

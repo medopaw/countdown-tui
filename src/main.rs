@@ -19,27 +19,27 @@ use timer::{CountdownState, TimerMode};
 use time_parser::parse_duration_or_time;
 
 #[derive(Parser)]
-#[command(name = "countdown")]
+#[command(name = "countdown-tui")]
 #[command(about = "A terminal countdown timer with big digital display", long_about = None)]
 #[command(
     after_help = "Examples:
-  countdown 25s
-  countdown --title \"Coffee Break\" 14:15
-  countdown 02:15PM
-  countdown --up 30s
-  countdown --say 10s"
+  countdown-tui 25s
+  countdown-tui -t \"Coffee Break\" 14:15
+  countdown-tui 02:15PM
+  countdown-tui -u 30s
+  countdown-tui -s 10s"
 )]
 struct Args {
     #[arg(value_name = "DURATION")]
     duration: Option<String>,
 
-    #[arg(long, help = "Count up from zero")]
+    #[arg(short = 'u', long = "up", help = "Count up from zero")]
     up: bool,
 
-    #[arg(long, help = "Announce the time left")]
+    #[arg(short = 's', long = "say", help = "Announce the time left")]
     say: bool,
 
-    #[arg(long, value_name = "TEXT", help = "Display title below the countdown")]
+    #[arg(short = 't', long = "title", value_name = "TEXT", help = "Display title below the countdown")]
     title: Option<String>,
     
     #[arg(long, help = "Run internal tests")]
@@ -57,8 +57,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
     
-    let duration_str = args.duration.ok_or("Duration is required when not in test mode")?;
-    let duration = parse_duration_or_time(&duration_str)?;
+    let duration_str = args.duration.ok_or("error: DURATION is required\n\nUSAGE:\n    countdown-tui [OPTIONS] <DURATION>\n\nFor more information try '--help'")?;
+    let duration = parse_duration_or_time(&duration_str)
+        .map_err(|e| format!("error: invalid duration or time format '{}'\n\nSupported formats:\n  Duration: 25s, 1m30s, 1h2m3s\n  Time: 14:15, 02:30PM, 10:00AM\n\nOriginal error: {}", duration_str, e))?;
     
     enable_raw_mode()?;
     stdout().execute(crossterm::cursor::Hide)?;
