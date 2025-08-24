@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::time::interval;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind, poll},
-    terminal::{disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
 use std::io::stdout;
@@ -62,10 +62,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|e| format!("error: invalid duration or time format '{}'\n\nSupported formats:\n  Duration: 25s, 1m30s, 1h2m3s\n  Time: 14:15, 02:30PM, 10:00AM\n\nOriginal error: {}", duration_str, e))?;
     
     enable_raw_mode()?;
+    stdout().execute(EnterAlternateScreen)?;
     stdout().execute(crossterm::cursor::Hide)?;
     
     let result = run_countdown(duration, args.up, args.say, args.title).await;
     
+    stdout().execute(LeaveAlternateScreen)?;
     disable_raw_mode()?;
     stdout().execute(crossterm::cursor::Show)?;
     
@@ -147,7 +149,7 @@ async fn run_countdown(
             }
             
             _ = &mut timer_deadline => {
-                // Time's up! Exit like original timer.C
+                // Time's up! Exit like original timer.C - don't draw 00:00, just break
                 break;
             }
             
