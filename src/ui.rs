@@ -56,25 +56,20 @@ pub fn render_countdown(
     let start_x = (display.width as usize).saturating_sub(total_width) / 2;
     let start_y = (display.height as usize).saturating_sub(height) / 2;
     
-    execute!(stdout(), cursor::MoveTo(0, 0))?;
+    // Clear entire screen like original clear() function
+    clear_screen()?;
     
-    // Render exactly like original Go echo() function - character by character
-    let mut current_x = start_x;
+    // Render each character symbol like original echo() function
+    let mut x = start_x;
     for char_map in &char_maps {
-        for row in 0..height {
-            if row < char_map.len() {
-                let y = start_y + row;
-                let line = char_map[row];
-                
-                // Set each character individually like termbox.SetCell
-                for (i, ch) in line.chars().enumerate() {
-                    execute!(stdout(), cursor::MoveTo((current_x + i) as u16, y as u16))?;
-                    execute!(stdout(), Print(ch))?;
-                }
+        for (row_idx, line) in char_map.iter().enumerate() {
+            let y = start_y + row_idx;
+            for (col_idx, ch) in line.chars().enumerate() {
+                execute!(stdout(), cursor::MoveTo((x + col_idx) as u16, y as u16))?;
+                execute!(stdout(), Print(ch))?;
             }
         }
-        // Move to next character position
-        current_x += char_map[0].chars().count();
+        x += char_map[0].chars().count();
     }
     
     if let Some(title_text) = title {

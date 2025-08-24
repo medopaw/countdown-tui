@@ -2,7 +2,7 @@ use clap::Parser;
 use std::time::Duration;
 use tokio::time::interval;
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEventKind, poll},
     terminal::{disable_raw_mode, enable_raw_mode},
     ExecutableCommand,
 };
@@ -84,13 +84,29 @@ async fn run_countdown(
     
     let mut tick_interval = interval(Duration::from_secs(1));
     let mut timer_deadline = Box::pin(tokio::time::sleep(total_duration));
+    let mut time_left = total_duration;
     
     let (event_tx, mut event_rx) = tokio::sync::mpsc::unbounded_channel();
     
-    tokio::spawn(async move {
-        while let Ok(event) = event::read() {
-            if event_tx.send(event).is_err() {
-                break;
+    let event_handle = tokio::spawn(async move {
+        loop {
+            // Use non-blocking poll with timeout
+            match poll(Duration::from_millis(100)) {
+                Ok(true) => {
+                    match event::read() {
+                        Ok(event) => {
+                            if event_tx.send(event).is_err() {
+                                break;
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+                Ok(false) => {
+                    // No event available, continue polling
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+                Err(_) => break,
             }
         }
     });
@@ -98,10 +114,10 @@ async fn run_countdown(
     clear_screen()?;
     
     // Initial draw
-    let current_display_duration = state.display_duration();
+    let current_display_duration = if count_up { Duration::ZERO } else { time_left };
     render_countdown(&mut display, current_display_duration, &title)?;
-    if say_time && !count_up && current_display_duration.as_secs() <= 10 && current_display_duration.as_secs() > 0 {
-        tokio::spawn(say_countdown(current_display_duration.as_secs()));
+    if say_time && !count_up && time_left.as_secs() <= 10 && time_left.as_secs() > 0 {
+        tokio::spawn(say_countdown(time_left.as_secs()));
     }
     
     loop {
@@ -111,12 +127,22 @@ async fn run_countdown(
                     continue;
                 }
                 
-                // Update display time (like original ticker.C)
-                state.tick();
-                let current_display_duration = state.display_duration();
-                render_countdown(&mut display, current_display_duration, &title)?;
-                if say_time && !count_up && current_display_duration.as_secs() <= 10 && current_display_duration.as_secs() > 0 {
-                    tokio::spawn(say_countdown(current_display_duration.as_secs()));
+                // Update time_left like original ticker.C logic
+                if time_left > Duration::from_secs(1) {
+                    time_left -= Duration::from_secs(1);
+                } else {
+                    time_left = Duration::ZERO;
+                }
+                
+                let display_duration = if count_up { 
+                    total_duration - time_left 
+                } else { 
+                    time_left 
+                };
+                render_countdown(&mut display, display_duration, &title)?;
+                
+                if say_time && !count_up && time_left.as_secs() <= 10 && time_left.as_secs() > 0 {
+                    tokio::spawn(say_countdown(time_left.as_secs()));
                 }
             }
             
@@ -133,12 +159,18 @@ async fn run_countdown(
                                 KeyCode::Char(' ') => {
                                     if state.is_paused() {
                                         state.resume();
-                                        // Restart timer with remaining time like original start(timeLeft)
-                                        timer_deadline = Box::pin(tokio::time::sleep(state.remaining_duration()));
-                                        let current_display_duration = state.display_duration();
-                                        render_countdown(&mut display, current_display_duration, &title)?;
+                                        // Restart timer with remaining time_left like original start(timeLeft)
+                                        timer_deadline = Box::pin(tokio::time::sleep(time_left));
+                                        let display_duration = if count_up { 
+                                            total_duration - time_left 
+                                        } else { 
+                                            time_left 
+                                        };
+                                        render_countdown(&mut display, display_duration, &title)?;
                                     } else {
                                         state.pause();
+                                        // Stop the timer like original stop() function
+                                        timer_deadline = Box::pin(tokio::time::sleep(Duration::from_secs(999999))); // Never expires
                                         render_paused(&mut display)?;
                                     }
                                 }
@@ -163,6 +195,9 @@ async fn run_countdown(
             }
         }
     }
+    
+    // Abort the event reading task to prevent further input processing
+    event_handle.abort();
     
     Ok(())
 }

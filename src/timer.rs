@@ -60,7 +60,4 @@ impl CountdownState {
         }
     }
     
-    pub fn remaining_duration(&self) -> Duration {
-        self.remaining_duration
-    }
 }
