@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2021"
 description = "A terminal countdown timer with big digital display"
 license = "MIT"
-repository = "https://github.com/your-username/countdown-tui"
+repository = "https://github.com/Med0paW/countdown-tui"
 keywords = ["cli", "timer", "countdown", "terminal", "tui"]
 categories = ["command-line-utilities"]
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Med0paW <medopaw@gmail.com>"]
+readme = "README.md"
 
 [[bin]]
 name = "countdown-tui"
