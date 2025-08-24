@@ -1,0 +1,20 @@
+[package]
+name = "countdown-tui"
+version = "0.1.0"
+edition = "2021"
+description = "A terminal countdown timer with big digital display"
+license = "MIT"
+repository = "https://github.com/your-username/countdown-tui"
+keywords = ["cli", "timer", "countdown", "terminal", "tui"]
+categories = ["command-line-utilities"]
+authors = ["Your Name <your.email@example.com>"]
+
+[[bin]]
+name = "countdown-tui"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+crossterm = "0.27"
+tokio = { version = "1.0", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
